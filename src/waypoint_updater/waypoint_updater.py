@@ -3,6 +3,10 @@
 import rospy
 from geometry_msgs.msg import PoseStamped
 from styx_msgs.msg import Lane, Waypoint
+## MR 27/11/2018:
+# Int32 message type is used by /traffic_waypoint
+# http://wiki.ros.org/rospy/Overview/Messages
+from std_msgs.msg import Int32
 
 import math
 
@@ -32,22 +36,98 @@ class WaypointUpdater(object):
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
         # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
-
-
+        # MR 27/11/2018:
+        # /traffic_waypoint has message type std_msgs/Int32 
+        rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
+        # MR 27/11/2018:
+        # Cannot find publishing node for /obstacle_waypoint
+        # Not sure if obstacle detection is a requirement:
+        # https://carnd.slack.com/messages/C6NVDVAQ3/convo/C6NVDVAQ3-1503591353.000237/
+        #rospy.Subscriber('/obstacle_waypoint', , self.obstacle_cb)
+        
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
         # TODO: Add other member variables you need below
+        # MR 27/11/2018:
+        # Object parameters for inputs
+        self.current_pose, self.track_map, self.track_length = None, None, None
+        # Object parameters for outputs
+        self.final_waypoints = Lane()
+        # Initialise track index which is closest to the ego vehicle
+        self.ego_idx = None
+		# Calculation parameters - publish rate is 50Hz
+        self.publish_rate = rospy.Rate(50)
+        self.node_creation_time = rospy.Time.now().to_sec()
+		
+		# MR 27/11/2018:
+		# rospy.spin() replaced with fixed rate publisher, as recommended in project Q & A video
+        # Run while loop until Ctrl+C
+        # Same approach as for running node as "Writing ROS Node - Lesson 5"
+        while not rospy.is_shutdown():
+            # If base_waypoints and current_pose have been received by the waypoint_loader node and simulator, 
+            # then we have enough info to create final_waypoints
+            # Same approach as Q & A Walkthrough videos for this project
+            if self.track_map and self.current_pose:
+                # Calculate the final waypoints - Function is unfinished
+                #self.calculate_final_waypoints()
+                # Publish the final waypoints which have been calculated
+                self.final_waypoints_pub.publish(self.final_waypoints)
+                # Print to logfiles. Publishing rate validated in logfile
+                rospy.loginfo('Final Waypoints published by waypoint_updater node')
+                rospy.loginfo('Waypoint_updater node has been alive for %f seconds', self.get_alive_time())
+            # Hold until 20ms has passed
+            self.publish_rate.sleep()
 
-        rospy.spin()
+    # MR 27/11/2018:
+    # Simple function which returns roughly how long the node has been alive.
+    # Matches Writing ROS Node - Lesson 5 
+    def get_alive_time(self):
+        return rospy.Time.now().to_sec() - self.node_creation_time
 
     def pose_cb(self, msg):
         # TODO: Implement
-        pass
+        # MR 27/11/2018:
+        # Set the object pose parameter to the value of the ROS message
+        # i.e. each time Simulator publishes a new position / orientation for the vehicle, update our stored values
+        self.current_pose = msg
+        rospy.loginfo('Current Pose has been updated in waypoint_updater node')
+        #pass
 
     def waypoints_cb(self, waypoints):
         # TODO: Implement
-        pass
+        # MR 27/11/2018:
+        # Base Waypoints are only sent once (see Lesson 5 notes on 'Waypoint Updater Node (Partial)').
+        # Therefore, when this callback function runs store the track map points
+        self.track_map = waypoints
+        # Number of points in the track map
+        self.track_length = len(self.track_map.waypoints)
+        rospy.loginfo('Track Map has been stored in waypoint_updater node')
+        # The following is just test code to check that interface with simulator is working:
+        # First 200 track points are highlighted (may be some distance away from vehicle)
+        self.final_waypoints.waypoints = self.track_map.waypoints[0:LOOKAHEAD_WPS]			
+        #pass
+		
+    # MR 27/11/2018:
+    # Function to set the final_waypoints 
+    def calculate_final_waypoints(self):
+        # Get the closest track point which is ahead of the ego vehicle
+        self.ego_idx = self.get_closest_track_point_ahead()
+        # If it is possible to locate ego vehicle on track map
+        if self.ego_idx:
+            ## Assign from the track map to the final waypoint vector 
+            # Iterate idx from 0 to 199
+            for idx in range(LOOKAHEAD_WPS):
+                # track_idx should handles wrap-around from end to beginning of the track
+                # Note: This current approach only works for one driving direction
+                track_idx = (idx + self.ego_idx) % self.track_length
+                # Set the final_waypoints, to be published in __init___ function
+                self.final_waypoints.waypoints[idx] = self.track_map[track_idx]
 
+    def get_closest_track_point_ahead(self):
+        # MR 27/11/2018 
+        # Unfinished...
+        pass
+    
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
         pass
