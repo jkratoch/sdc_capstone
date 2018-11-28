@@ -3,28 +3,22 @@ import cv2
 from styx_msgs.msg import TrafficLight
 
 
-RED_THRESHOLD = 700
+RED_THRESHOLD = 1000
 
 class TLClassifier(object):
-    def __init__(self):
-        #TODO load classifier
-        pass
+    def __init__(self, launch_type):
+        # DH 28/11/2018
+        self.launch_type = launch_type
 
     def get_classification(self, image):
-        # FOR SIMULATOR ONLY
-        # DH 27/11/2018
+        # DH 28/11/2018
+        if self.launch_type == "SIM":
+            return self.sim_classifier(image)
+        else:
+            return self.site_classifier(image)
 
-        """Determines the color of the traffic light in the image
-
-        Args:
-            image (cv::Mat): image containing the traffic light
-
-        Returns:
-            int: ID of traffic light color (specified in styx_msgs/TrafficLight)
-
-        """
-        #TODO implement light color prediction
-
+    def sim_classifier(self, image):
+        # DH 28/11/2018
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
         lower1 = np.array([0, 50, 50])
@@ -47,3 +41,10 @@ class TLClassifier(object):
         else:
             print('NOT RED')
             return TrafficLight.UNKNOWN
+
+    def site_classifier(self, image):
+        # DH 28/11/2018
+        # TODO - working on it
+        pass
+
+
