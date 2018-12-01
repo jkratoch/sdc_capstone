@@ -66,7 +66,7 @@ class WaypointUpdater(object):
 		
         # Set to TRUE to test stopping at traffic lights, based on simulator's real reported
         # status for traffic lights
-        self.do_test_TL = True #MR
+        self.do_test_TL = False #MR
         if (self.do_test_TL): #MR
 		    # List of traffic light structures sent in topic /vehicle/traffic_lights
             self.tl_array = None #MR
@@ -79,7 +79,7 @@ class WaypointUpdater(object):
         # TODO: Add other member variables you need below
         # MR 27/11/2018:
         # Object parameters for inputs
-        self.current_pose, self.track_map, self.track_length, self.track_cKDTree = None, None, None, None #MR
+        self.current_pose, self.track_map, self.track_length, self.track_cKDTree, self.traffic_light_waypoint = None, None, None, None, None #MR
         # Set to true to print track co-ordinates to file
         self.do_print_track_map_2_file = False # MR
         # Object parameters for outputs
@@ -240,6 +240,8 @@ class WaypointUpdater(object):
         # Currently, only run this code if testing without TL classifier implemented
 		# Method implemented here for reducing speed borrows heavily from Project Walkthrough videos
 		
+        noRed = None
+		
         # MR 29/11/2018
         # Only for testing TL functionality prior to developing classifier
         if self.do_test_TL: #MR
@@ -256,19 +258,20 @@ class WaypointUpdater(object):
                 stop_idx = max(0, tl_idx - 12) # MR - Want to stop 12 track points before the TL
 		        # This is the next traffic light ahead of the vehicle
                 tl = self.tl_array[tl_en]
+                noRed = True if tl.state == GREEN else False
         else: 
 			# MR 01/12/2018
-			# TO BE COMPLETED !!!
-            # Once classifier is developed, 
-            # Set:
-			# stop_idx
-			# tl
-            self.final_waypoints.waypoints = final_waypoints_base_speed #MR
-            return #MR
+            if not self.traffic_light_waypoint:
+                self.final_waypoints.waypoints = final_waypoints_base_speed #MR
+                return
+            else:
+                stop_idx = max(0, self.traffic_light_waypoint) # Check in simulation. 
+                noRed = True if self.traffic_light_waypoint == -1 else False
+
 
         #rospy.loginfo('Car idx: %d, TL Closest: %d', self.ego_idx, tl_idx) #MR
 
-        if tl.state == GREEN: #MR
+        if noRed: #MR
 			# If traffic light is green, drive at speed specified by Track Map
             self.final_waypoints.waypoints = final_waypoints_base_speed #MR
         else:
