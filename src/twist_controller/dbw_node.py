@@ -57,8 +57,35 @@ class DBWNode(object):
         # self.controller = Controller(<Arguments you wish to provide>)
 
         # TODO: Subscribe to all the topics you need to
+        # Rahul 11/30/2018 This code is mostly influenced from the walkthrough videos,
+
+        rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_cmd_cb)
+        rospy.Subscriber('/vehicle/dbw_enabled', Bool, self.dbw_enabled_cb)
+        rospy.Subscriber('/vehicle/steering_report', SteeringReport,
+                         self.current_velocity_cb)
+
+        self.throttle = self.steering = self.brake = 0
+        self.current_vel = self.curr_ang_vel = self.linear_vel = self.angular_vel = None
+        self.dbw_enabled = False
 
         self.loop()
+
+        return
+
+
+    def current_velocity_cb(self, msg):
+        self.current_vel = msg.twist.linear.x
+        return
+
+    def dbw_enabled_cb(self,msg):
+        self.dbw_enabled = msg
+        return
+
+    def twist_cmd_cb(self, msg):
+        self.linear_vel = msg.twist.linear.x
+        self.angular_vel = msg.twist.angular.z
+        return
+
 
     def loop(self):
         rate = rospy.Rate(50) # 50Hz
@@ -72,7 +99,17 @@ class DBWNode(object):
             #                                                     <any other argument you need>)
             # if <dbw is enabled>:
             #   self.publish(throttle, brake, steer)
+            if not None in (self.current_vel, self.linear_vel, self.angular_vel):
+                t, b, s = self.controller.control(self.current_vel, self.dbw_enabled, self.linear_vel, self.angular_vel)
+
+                self.throttle, self.brake, self.steer = t, b, s
+
+            if self.dbw_enabled:
+                self.publish(self.throttle, self.brake, self.steer)
+
             rate.sleep()
+
+        return
 
     def publish(self, throttle, brake, steer):
         tcmd = ThrottleCmd()
