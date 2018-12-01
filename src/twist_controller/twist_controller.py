@@ -62,7 +62,7 @@ class Controller(object):
         vel_error = linear_vel - current_vel
         self.last_vel = current_vel
 
-        throttle = self.pid_cont.step(vel_error, self.elapsed_time)
+        throttle = self.pid_cont.step(vel_error, self.elapsed_time())
         brake = 0
 
         vehicle_mass = self.get_vehicle_mass()

@@ -54,14 +54,17 @@ class DBWNode(object):
                                          BrakeCmd, queue_size=1)
 
         # TODO: Create `Controller` object
-        # self.controller = Controller(<Arguments you wish to provide>)
+        # DH 30/11/2018
+        self.controller = Controller(vehicle_mass, fuel_capacity, brake_deadband, decel_limit,
+                                     accel_limit, wheel_radius, wheel_base, steer_ratio,
+                                     max_lat_accel, max_steer_angle)
 
         # TODO: Subscribe to all the topics you need to
         # Rahul 11/30/2018 This code is mostly influenced from the walkthrough videos,
 
         rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_cmd_cb)
         rospy.Subscriber('/vehicle/dbw_enabled', Bool, self.dbw_enabled_cb)
-        rospy.Subscriber('/vehicle/steering_report', SteeringReport,
+        rospy.Subscriber('/current_velocity', TwistStamped,
                          self.current_velocity_cb)
 
         self.throttle = self.steering = self.brake = 0
