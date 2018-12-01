@@ -46,6 +46,7 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
+        self.camera_count = 0
 
         rospy.spin()
 
@@ -73,6 +74,13 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
+
+        # DH 30/11/2018
+        # to reduce latency from camera image processing
+        self.camera_count = (self.camera_count + 1) % 5
+        if self.camera_count > 0:
+        	return
+
         self.has_image = True
         self.camera_image = msg
         light_wp, state = self.process_traffic_lights()
