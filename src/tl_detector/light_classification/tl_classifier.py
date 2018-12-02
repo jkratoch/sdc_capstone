@@ -1,14 +1,45 @@
 import numpy as np
 import cv2
+import tensorflow as tf
 from styx_msgs.msg import TrafficLight
 
 
 RED_THRESHOLD = 1000
+DETECTION_THRESHOLD = 0.5
+
+LABEL_DICT = {1: TrafficLight.GREEN,
+              2: TrafficLight.RED, 
+              3: TrafficLight.YELLOW,
+              4: TrafficLight.UNKNOWN}
+
+num_classes = 4
 
 class TLClassifier(object):
     def __init__(self, launch_type):
-        # DH 28/11/2018
+        # DH 2/12/2018
         self.launch_type = launch_type
+
+        if self.launch_type == "SITE":
+            PATH_TO_FROZEN_GRAPH = 'model/frozen_inference_graph.pb'
+
+            self.graph = tf.Graph()
+            with self.graph.as_default():
+                od_graph_def = tf.GraphDef()
+                with tf.gfile.GFile(PATH_TO_FROZEN_GRAPH, 'rb') as fid:
+                    serialized_graph = fid.read()
+                    od_graph_def.ParseFromString(serialized_graph)
+                    tf.import_graph_def(od_graph_def, name='')
+
+            self.sess = tf.Session(graph=self.graph)
+
+            tensor_names = ['num_detections', 'detection_boxes', 
+                            'detection_scores', 'detection_classes']
+
+            self.tensor_dict = {}
+            for tensor_name in tensor_names:
+                self.tensor_dict[tensor_name] = self.graph.get_tensor_by_name(
+                                                    tensor_name + ':0')
+            self.image_tensor = self.graph.get_tensor_by_name('image_tensor:0')
 
     def get_classification(self, image):
         # DH 28/11/2018
@@ -43,8 +74,30 @@ class TLClassifier(object):
             return TrafficLight.UNKNOWN
 
     def site_classifier(self, image):
-        # DH 28/11/2018
-        # TODO - working on it
-        pass
+        # DH 2/12/2018
+        image = np.expand_dims(image, axis=0)
+
+        with self.graph.as_default():
+            output_dict = self.sess.run(self.tensor_dict, 
+                                        feed_dict={self.image_tensor: image})
+
+        scores = output_dict['detection_scores'][0]
+        classes = output_dict['detection_classes'][0]
+        votes = []
+
+        for i in range(num_classes):
+            if scores[i] > DETECTION_THRESHOLD:
+                votes.append(int(classes[i]))
+
+        if votes:
+            majority_vote = max(votes, key=votes.count)
+        else:
+            majority_vote = 4
+
+        # return LABEL_DICT[majority_vote]
+        return majority_vote    # for site_classifier_test.ipynb
+
+
+        
 
 
