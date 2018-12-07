@@ -287,7 +287,8 @@ class WaypointUpdater(object):
 			    wp_idx_on_track = final_wp_idx_vect[it] #MR
 			    d = self.distance(self.track_map.waypoints, wp_idx_on_track, stop_idx) #MR
 			    #v = max(0, min(ego_v, ego_v *(d)/d_total)) #MR
-			    v = v_init * (d / 100) #MR -> SQRT not used. Linear decrease in velocity w/ distance is assumed. Max Decel is not accounted for.
+			    # v = v_init * (d / 100) #MR -> SQRT not used. Linear decrease in velocity w/ distance is assumed. Max Decel is not accounted for.
+			    v = sqrt(d)
 			    v = 0 if v < 2 else v #MR - as per Project Walkthrough, if velocity low enough, just set target to 0 m/s
 			    W.twist.twist.linear.x = min(v , v_init) #MR - base waypoints hold speed limit - therefore don't exceed this
 			    self.final_waypoints.waypoints.append(W) #MR
