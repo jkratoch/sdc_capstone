@@ -7,25 +7,22 @@ from styx_msgs.msg import TrafficLight
 RED_THRESHOLD = 1000
 DETECTION_THRESHOLD = 0.5
 
-LABEL_DICT = {1: TrafficLight.GREEN,
-              2: TrafficLight.RED, 
-              3: TrafficLight.YELLOW,
-              4: TrafficLight.UNKNOWN}
+LABEL_DICT = {1: [TrafficLight.GREEN, 'Green'],
+              2: [TrafficLight.RED, 'Red'], 
+              3: [TrafficLight.YELLOW, 'Yellow'],
+              4: [TrafficLight.UNKNOWN, 'Unknown']}
 
 num_classes = 4
 
 class TLClassifier(object):
-    def __init__(self, launch_type):
-        # DH 2/12/2018
+    def __init__(self, launch_type, model_path):
         self.launch_type = launch_type
 
         if self.launch_type == "SITE":
-            PATH_TO_FROZEN_GRAPH = 'model/frozen_inference_graph.pb'
-
             self.graph = tf.Graph()
             with self.graph.as_default():
                 od_graph_def = tf.GraphDef()
-                with tf.gfile.GFile(PATH_TO_FROZEN_GRAPH, 'rb') as fid:
+                with tf.gfile.GFile(model_path, 'rb') as fid:
                     serialized_graph = fid.read()
                     od_graph_def.ParseFromString(serialized_graph)
                     tf.import_graph_def(od_graph_def, name='')
@@ -42,14 +39,12 @@ class TLClassifier(object):
             self.image_tensor = self.graph.get_tensor_by_name('image_tensor:0')
 
     def get_classification(self, image):
-        # DH 28/11/2018
         if self.launch_type == "SIM":
             return self.sim_classifier(image)
         else:
             return self.site_classifier(image)
 
     def sim_classifier(self, image):
-        # DH 28/11/2018
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
         lower1 = np.array([0, 50, 50])
@@ -74,7 +69,6 @@ class TLClassifier(object):
             return TrafficLight.UNKNOWN
 
     def site_classifier(self, image):
-        # DH 2/12/2018
         image = np.expand_dims(image, axis=0)
 
         with self.graph.as_default():
@@ -94,8 +88,8 @@ class TLClassifier(object):
         else:
             majority_vote = 4
 
-        # return LABEL_DICT[majority_vote]
-        return majority_vote    # for site_classifier_test.ipynb
+        print(LABEL_DICT[majority_vote][1])
+        return LABEL_DICT[majority_vote][0]
 
 
         
