@@ -22,6 +22,19 @@ class DBWNode(object):
         max_lat_accel = rospy.get_param('~max_lat_accel', 3.)
         max_steer_angle = rospy.get_param('~max_steer_angle', 8.)
 
+        self.throttle = 0
+        self.steering = 0
+        self.brake = 0
+        self.current_vel = None
+        self.curr_ang_vel = None
+        self.linear_vel = None
+        self.angular_vel = None
+        self.dbw_enabled = False
+        self.controller = Controller(vehicle_mass, fuel_capacity, brake_deadband, 
+                                     decel_limit, accel_limit, wheel_radius, 
+                                     wheel_base, steer_ratio, max_lat_accel, 
+                                     max_steer_angle)
+
         rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_cmd_cb)
         rospy.Subscriber('/vehicle/dbw_enabled', Bool, self.dbw_enabled_cb)
         rospy.Subscriber('/current_velocity', TwistStamped,
@@ -33,14 +46,6 @@ class DBWNode(object):
                                             ThrottleCmd, queue_size=1)
         self.brake_pub = rospy.Publisher('/vehicle/brake_cmd',
                                          BrakeCmd, queue_size=1)
-
-        self.controller = Controller(vehicle_mass, fuel_capacity, brake_deadband, decel_limit,
-                                     accel_limit, wheel_radius, wheel_base, steer_ratio,
-                                     max_lat_accel, max_steer_angle)
-
-        self.throttle = self.steering = self.brake = 0
-        self.current_vel = self.curr_ang_vel = self.linear_vel = self.angular_vel = None
-        self.dbw_enabled = False
 
         self.loop()
 

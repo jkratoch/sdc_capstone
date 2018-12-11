@@ -24,7 +24,8 @@ class Controller(object):
         self.pid_cont = PID(0.3, 0.1, 0, 0, 0.2)
         self.vel_lpf = LowPassFilter(0.5,.02)
         self.lpf_fuel = LowPassFilter(60.0, 0.1)
-        self.yaw_cont = YawController(wheel_base, steer_ratio, 4.* ONE_MPH, max_lat_accel, max_steer_angle)
+        self.yaw_cont = YawController(wheel_base, steer_ratio, 4.* ONE_MPH, 
+                                      max_lat_accel, max_steer_angle)
         self.last_time = rospy.get_time()
 
     def set_fuel(self, level):

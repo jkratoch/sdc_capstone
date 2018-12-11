@@ -22,13 +22,6 @@ class TLDetector(object):
         launch_type = rospy.get_param("launch_type")  # Options: 'SIM' or 'SITE'
         model_path = rospy.get_param("model_path") if launch_type == 'SITE' else None
 
-        rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
-        rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
-        rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
-        rospy.Subscriber('/image_color', Image, self.image_cb)
-
-        self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
-
         self.pose = None
         self.waypoints = None
         self.camera_image = None
@@ -43,6 +36,13 @@ class TLDetector(object):
         self.last_wp = -1
         self.state_count = 0
         self.camera_count = 0
+
+        rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
+        rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
+        rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
+        rospy.Subscriber('/image_color', Image, self.image_cb)
+
+        self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
         rospy.spin()
 
@@ -62,7 +62,7 @@ class TLDetector(object):
 
     def image_cb(self, msg):
         # To reduce latency from camera image processing
-        self.camera_count = (self.camera_count + 1) % 5  # Process every 5th image
+        self.camera_count = (self.camera_count + 1) % 3  # Process every 3rd image
         if self.camera_count > 0:
         	return
 
