@@ -4,15 +4,13 @@ import tensorflow as tf
 from styx_msgs.msg import TrafficLight
 
 
-RED_THRESHOLD = 1000
+RED_THRESHOLD = 1500
 DETECTION_THRESHOLD = 0.5
 
 LABEL_DICT = {1: [TrafficLight.GREEN, 'Green'],
               2: [TrafficLight.RED, 'Red'], 
               3: [TrafficLight.YELLOW, 'Yellow'],
               4: [TrafficLight.UNKNOWN, 'Unknown']}
-
-num_classes = 4
 
 class TLClassifier(object):
     def __init__(self, launch_type, model_path):
@@ -45,7 +43,7 @@ class TLClassifier(object):
             return self.site_classifier(image)
 
     def sim_classifier(self, image):
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
 
         lower1 = np.array([0, 50, 50])
         upper1 = np.array([10, 256, 256])
@@ -62,10 +60,10 @@ class TLClassifier(object):
         red_count = np.count_nonzero(red)
 
         if red_count > RED_THRESHOLD:
-            print('RED')
+            print('RED', red_count)
             return TrafficLight.RED
         else:
-            print('NOT RED')
+            print('NOT RED', red_count)
             return TrafficLight.UNKNOWN
 
     def site_classifier(self, image):
@@ -75,20 +73,15 @@ class TLClassifier(object):
             output_dict = self.sess.run(self.tensor_dict, 
                                         feed_dict={self.image_tensor: image})
 
-        scores = output_dict['detection_scores'][0]
-        classes = output_dict['detection_classes'][0]
-        votes = []
+        score = output_dict['detection_scores'][0][0]
+        label = output_dict['detection_classes'][0][0]
 
-        for i in range(num_classes):
-            if scores[i] > DETECTION_THRESHOLD:
-                votes.append(int(classes[i]))
-
-        if votes:
-            majority_vote = max(votes, key=votes.count)
+        if score > DETECTION_THRESHOLD:
+            majority_vote = int(label)
         else:
             majority_vote = 4
 
-        print(LABEL_DICT[majority_vote][1])
+        print(LABEL_DICT[majority_vote][1], score)
         return LABEL_DICT[majority_vote][0]
 
 
