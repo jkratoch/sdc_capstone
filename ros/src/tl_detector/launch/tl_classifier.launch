@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+	<node pkg="tl_detector" type="tl_detector.py" name="tl_detector" output="screen" cwd="node"/>
+	<param name="launch_type" value="SITE"/>
+	<param name="model_path" value="$(find tl_detector)/light_classification/model/frozen_inference_graph.pb"/>
+	<param name="traffic_light_config" textfile="$(find tl_detector)/sim_traffic_light_config.yaml"/>
+	<node pkg="rosbag" type="play" name="rosbag" args="-l $(find styx)../../../data/traffic_light_training.bag"/>
+</launch>
