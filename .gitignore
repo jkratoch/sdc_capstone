@@ -1,0 +1,7 @@
+build
+devel
+ros/src/CMakeLists.txt
+
+*__pycache__*
+*.ipynb_checkpoints*
+*.pyc*
