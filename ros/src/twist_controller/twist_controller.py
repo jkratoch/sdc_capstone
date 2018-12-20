@@ -12,6 +12,9 @@ class Controller(object):
                  accel_limit, wheel_radius, wheel_base, steer_ratio, 
                  max_lat_accel, max_steer_angle):
 
+        # This code is mostly influenced by the Walkthrough videos, with addition of some suggestions
+        # suggested by Steven with respect to considering the fuel capacity for vehicle mass calculations.
+    
         self.vehicle_mass = vehicle_mass
         self.fuel_capacity = fuel_capacity
         self.brake_deadband = brake_deadband
@@ -58,7 +61,7 @@ class Controller(object):
         elif throttle < 0.1 and vel_error < 0:
             throttle = 0
             decel = max(vel_error, self.decel_limit)
-            brake = vehicle_mass * abs(decel) * self.wheel_radius
+            brake = vehicle_mass * abs(decel) * self.wheel_radius # torque = force * wheel radius, force = mass * deceleration
 
         steering = self.yaw_cont.get_steering(linear_vel, angular_vel, current_vel)
         return throttle, brake, steering
