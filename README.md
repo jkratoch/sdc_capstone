@@ -1,8 +1,8 @@
 # sdc_capstone
 
-Capstone Project for Udacity Self-Driving Car Nanodegree Program (Term 3)
+Capstone Project for Udacity Self-Driving Car Engineer Nanodegree Program (Term 3)
 
-Team Members: Desi Hsu, Mark Roche, Rahul Nagavally, Atul Kumar, and Jan Michael Kratochvil
+Team: Desi Hsu <desihsu@gmail.com>, Mark Roche <mark.roche13@alumni.imperial.ac.uk>, Rahul Nagavally <rahulnagavally@gmail.com>, Atul Kumar <atulk30@yahoo.com>, and Jan Michael Kratochvil <jansphoto@gmail.com>
 
 Acknowledgment of Sources:
 The code utilizes starter code provided by Udacity (see License file). The project implementation also makes substantial use of the Project Walkthrough videos, which are part of the Udacity course.
